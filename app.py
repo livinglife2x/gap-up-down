@@ -15,7 +15,7 @@ json_file_key = 'config.json'
 response = s3.get_object(Bucket=bucket_name, Key=json_file_key)
 content = response['Body'].read().decode('utf-8')
 config = json.loads(content)
-print(json_data)
+print(config)
 
 
 key = 'stocks_to_trade.csv'
