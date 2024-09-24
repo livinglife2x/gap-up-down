@@ -5,6 +5,7 @@ import json
 import concurrent.futures
 import math
 import time
+import boto3
 
 s3 = boto3.client('s3')
 bucket_name = 'trades-stock-list-access-token'
