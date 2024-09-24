@@ -1,4 +1,4 @@
-from dep.py import *
+from dep import *
 s3 = boto3.client('s3')
 bucket_name = 'trades-stock-list-access-token'
 json_file_key = 'config.json'
