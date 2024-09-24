@@ -6,6 +6,7 @@ import math
 import time
 
 def place_order(symbol,side,quantity):
+    global access_token
     url = 'https://api-hft.upstox.com/v2/order/place'
     headers = {
     'Content-Type': 'application/json',
@@ -43,6 +44,7 @@ def place_order(symbol,side,quantity):
         return False
         
 def get_market_status():
+    global access_token
     url = 'https://api.upstox.com/v2/market/status/NSE'
     headers = {
     'Accept': 'application/json',
@@ -57,6 +59,7 @@ def get_market_status():
     return False
     
 def get_ltp(symbol):
+    global access_token
     url = f'https://api.upstox.com/v2/market-quote/ltp?instrument_key={symbol}'
     headers = {
     'Accept': 'application/json',
@@ -68,6 +71,7 @@ def get_ltp(symbol):
         return response.json()['data'][i]['last_price']
 
 def get_balance():
+    global access_token
     url = 'https://api.upstox.com/v2/user/get-funds-and-margin'
 
     headers = {
@@ -100,6 +104,7 @@ def execute_orders(trade_list):
     return results
 
 def get_positions():
+    global access_token
     positions = []
     url = 'https://api.upstox.com/v2/portfolio/short-term-positions'
     headers = {
@@ -118,6 +123,7 @@ def get_positions():
             
 
 def get_historical_data(symbol):
+    global access_token
     url = f'https://api.upstox.com/v2/historical-candle/{symbol}/day/2099-12-30/2024-01-01'
     headers = {
     'Accept': 'application/json'
