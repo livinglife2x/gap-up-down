@@ -80,7 +80,7 @@ def get_balance(access_token):
     return response.json()['data']['equity']['available_margin']
 def generate_stock_list(stocks_to_trade,access_token):
     trade_list = []
-    capital_per_stock = get_balance()/len(stocks_to_trade)
+    capital_per_stock = get_balance(access_token)/len(stocks_to_trade)
     for symbol in stocks_to_trade:
         temp_dict={}
         temp_dict['symbol'] = symbol
