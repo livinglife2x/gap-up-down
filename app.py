@@ -24,7 +24,7 @@ obj = s3.get_object(Bucket=bucket_name, Key=key)
 stocks_to_trade = pd.read_csv(io.BytesIO(obj['Body'].read()))['1']
 #config = json.load('.Downloads/config')
 access_token = config['access_token']
-trade_day = config['trades_day']
+trade_day = config['trade_day']
 #stocks_to_trade = pd.read_csv('./Downloads/stocks_to_trade.csv')['1']
 positions_taken = False
 india = pytz.timezone('Asia/Calcutta')
