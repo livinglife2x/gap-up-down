@@ -5,8 +5,7 @@ import concurrent.futures
 import math
 import time
 
-def place_order(symbol,side,quantity):
-    global access_token
+def place_order(symbol,side,quantity,access_token):
     url = 'https://api-hft.upstox.com/v2/order/place'
     headers = {
     'Content-Type': 'application/json',
@@ -43,8 +42,7 @@ def place_order(symbol,side,quantity):
         print('Error:', str(e))
         return False
         
-def get_market_status():
-    global access_token
+def get_market_status(access_token):
     url = 'https://api.upstox.com/v2/market/status/NSE'
     headers = {
     'Accept': 'application/json',
@@ -58,8 +56,7 @@ def get_market_status():
         return True
     return False
     
-def get_ltp(symbol):
-    global access_token
+def get_ltp(symbol,access_token):
     url = f'https://api.upstox.com/v2/market-quote/ltp?instrument_key={symbol}'
     headers = {
     'Accept': 'application/json',
@@ -70,8 +67,7 @@ def get_ltp(symbol):
     for i in response.json()['data']:
         return response.json()['data'][i]['last_price']
 
-def get_balance():
-    global access_token
+def get_balance(access_token):
     url = 'https://api.upstox.com/v2/user/get-funds-and-margin'
 
     headers = {
@@ -82,29 +78,29 @@ def get_balance():
     response = requests.get(url, headers=headers)
     print(response)
     return response.json()['data']['equity']['available_margin']
-def generate_stock_list(stocks_to_trade):
+def generate_stock_list(stocks_to_trade,access_token):
     trade_list = []
     capital_per_stock = get_balance()/len(stocks_to_trade)
     for symbol in stocks_to_trade:
         temp_dict={}
         temp_dict['symbol'] = symbol
-        ltp = get_ltp(symbol)
+        ltp = get_ltp(symbol,access_token)
         prv_high = get_historical_data(symbol)[2].iloc[-1]
-        temp_dict['quantity'] = math.floor(capital_per_stock/ltp)
+        temp_dict['quantity'] = math.floor(capital_per_stock/ltp)-1
         temp_dict['side'] = 'SELL'
+        temp_dict['access_token'] = access_token
         if ltp<prv_high:
             trade_list.append(temp_dict)
     return trade_list
 
 def execute_orders(trade_list):
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(place_order, stock['symbol'], stock['side'], stock['quantity']) for stock in trade_list]
+        futures = [executor.submit(place_order, stock['symbol'], stock['side'], stock['quantity'],stock['access_token']) for stock in trade_list]
         results = [f.result() for f in concurrent.futures.as_completed(futures)]
         
     return results
 
-def get_positions():
-    global access_token
+def get_positions(access_token):
     positions = []
     url = 'https://api.upstox.com/v2/portfolio/short-term-positions'
     headers = {
@@ -123,7 +119,6 @@ def get_positions():
             
 
 def get_historical_data(symbol):
-    global access_token
     url = f'https://api.upstox.com/v2/historical-candle/{symbol}/day/2099-12-30/2024-01-01'
     headers = {
     'Accept': 'application/json'
@@ -138,27 +133,28 @@ def get_historical_data(symbol):
         print(f"Error: {response.status_code} - {response.text}")
         return pd.DataFrame()
 
-def check_prv_high_exit(symbol,quantity):
+def check_prv_high_exit(symbol,quantity,access_token):
     hist_data = get_historical_data(symbol)
     if hist_data.empty:
         return False
     prv_high = hist_data[2].iloc[-1]
-    ltp = get_ltp(symbol)
+    ltp = get_ltp(symbol,access_token)
     if ltp>prv_high:
-        place_order(symbol,'BUY',quantity)
+        place_order(symbol,'BUY',quantity,access_token)
     return True
         
-def generate_exit_list(existing_positions):
+def generate_exit_list(existing_positions,access_token):
     exit_trade_list = []
     for i in existing_positions:
         temp_dict = {}
         temp_dict['symbol'] = i['symbol']
         temp_dict['quantity'] = i['quantity']
         temp_dict['side'] = 'BUY'
+        temp_dict['access_token']=access_token
         exit_trade_list.append(temp_dict)
     return exit_trade_list
 
 def execute_exit_orders(exit_trade_list):
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(check_prv_high_exit, stock['symbol'], stock['quantity']) for stock in exit_trade_list]
+        futures = [executor.submit(check_prv_high_exit, stock['symbol'], stock['quantity'],stock['access_token']) for stock in exit_trade_list]
         results = [f.result() for f in concurrent.futures.as_completed(futures)]  
