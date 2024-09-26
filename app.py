@@ -31,7 +31,7 @@ trade_day = config['trade_day']
 positions_taken = False
 india = pytz.timezone('Asia/Calcutta')
 today = dt.datetime.now(india)
-existing_position=None
+existing_positions=None
 
 while True:
     try:
