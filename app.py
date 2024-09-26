@@ -31,6 +31,7 @@ trade_day = config['trade_day']
 positions_taken = False
 india = pytz.timezone('Asia/Calcutta')
 today = dt.datetime.now(india)
+existing_position=None
 
 while True:
     try:
@@ -41,11 +42,12 @@ while True:
             execute_orders(trade_list)
             positions_taken=True
             time.sleep(5)
-        existing_positions = get_positions(access_token)
+        if positions_taken:
+          existing_positions = get_positions(access_token)
+          time.sleep(5)
         if existing_positions:
             exit_trade_list = generate_exit_list(existing_positions,access_token)
             execute_exit_orders(exit_trade_list)
-        existing_positions = get_positions(access_token)
         if today.time()>=dt.datetime.strptime("15:09", '%H:%M').time() and existing_positions:
             exit_trade_list = generate_exit_list(existing_positions,access_token)
             execute_orders(exit_trade_list)
