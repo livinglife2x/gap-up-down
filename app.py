@@ -32,13 +32,16 @@ positions_taken = False
 india = pytz.timezone('Asia/Calcutta')
 today = dt.datetime.now(india)
 existing_positions=None
-
+capital_per_stock = get_balance(access_token)/len(stocks_to_trade)
+stock_feed = []
+for stock in stocks_to_trade:
+    stock_feed.append([stock,capital_per_stock,access_token])
 while True:
     try:
         today = dt.datetime.now(india)
         if today.time()>=dt.datetime.strptime("9:15", '%H:%M').time() and not positions_taken and trade_day:
-          trade_list = generate_stock_list(stocks_to_trade,access_token)
-          if get_market_status(access_token):
+          trade_list = return_stock_trade_list(stock_feed)
+          if get_market_status(access_token) and trade_list:
             execute_orders(trade_list)
             positions_taken=True
             time.sleep(5)
