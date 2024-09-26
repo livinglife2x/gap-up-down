@@ -78,20 +78,19 @@ def get_balance(access_token):
     response = requests.get(url, headers=headers)
     print(response)
     return response.json()['data']['equity']['available_margin']
-def generate_stock_list(stocks_to_trade,access_token):
-    trade_list = []
-    capital_per_stock = get_balance(access_token)/len(stocks_to_trade)
-    for symbol in stocks_to_trade:
-        temp_dict={}
-        temp_dict['symbol'] = symbol
-        ltp = get_ltp(symbol,access_token)
-        prv_high = get_historical_data(symbol)[2].iloc[-1]
+def generate_stock_list(data):
+    symbol = data[0]
+    capital_per_stock = data[1]
+    access_token = data[2]
+    temp_dict={}
+    ltp = get_ltp(symbol,access_token)
+    prv_high = get_historical_data(symbol)[2].iloc[-1]
+    if ltp<prv_high:
+        temp_dict['symbol']=symbol
         temp_dict['quantity'] = math.floor(capital_per_stock/ltp)-1
         temp_dict['side'] = 'SELL'
         temp_dict['access_token'] = access_token
-        if ltp<prv_high:
-            trade_list.append(temp_dict)
-    return trade_list
+    return temp_dict
 
 def execute_orders(trade_list):
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -158,3 +157,13 @@ def execute_exit_orders(exit_trade_list):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = [executor.submit(check_prv_high_exit, stock['symbol'], stock['quantity'],stock['access_token']) for stock in exit_trade_list]
         results = [f.result() for f in concurrent.futures.as_completed(futures)]  
+
+def return_stock_trade_list(stock_feed):
+    results = []
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = {executor.submit(generate_stock_list, data): data for data in stock_feed}
+        for future in concurrent.futures.as_completed(futures):
+            order_dict = future.result()
+            if order_dict:
+                results.append(order_dict)
+    return results
