@@ -84,6 +84,7 @@ def generate_stock_list(data):
     access_token = data[2]
     temp_dict={}
     ltp = get_ltp(symbol,access_token)
+    print(ltp)
     prv_high = get_historical_data(symbol)[2].iloc[-1]
     if ltp<prv_high:
         temp_dict['symbol']=symbol
