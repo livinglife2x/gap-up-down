@@ -87,7 +87,7 @@ def generate_stock_list(data):
     prv_high = get_historical_data(symbol)[2].iloc[-1]
     if ltp<prv_high:
         temp_dict['symbol']=symbol
-        temp_dict['quantity'] = math.floor(capital_per_stock/ltp)-1
+        temp_dict['quantity'] = (math.floor(capital_per_stock/ltp))*2
         temp_dict['side'] = 'SELL'
         temp_dict['access_token'] = access_token
     return temp_dict
