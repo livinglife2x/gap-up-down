@@ -163,6 +163,6 @@ def execute_exit_orders(exit_trade_list):
 def execute_stock_trade_list(stock_feed):
     results = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = {executor.submit(generate_stock_list, data): data for data in stock_feed}
+        futures = {executor.submit(execute_stock_list, data): data for data in stock_feed}
         results = [f.result() for f in concurrent.futures.as_completed(futures)]  
     return results
