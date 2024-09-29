@@ -160,12 +160,9 @@ def execute_exit_orders(exit_trade_list):
         futures = [executor.submit(check_prv_high_exit, stock['symbol'], stock['quantity'],stock['access_token']) for stock in exit_trade_list]
         results = [f.result() for f in concurrent.futures.as_completed(futures)]  
 
-def return_stock_trade_list(stock_feed):
+def execute_stock_trade_list(stock_feed):
     results = []
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = {executor.submit(generate_stock_list, data): data for data in stock_feed}
-        for future in concurrent.futures.as_completed(futures):
-            order_dict = future.result()
-            if order_dict:
-                results.append(order_dict)
+        results = [f.result() for f in concurrent.futures.as_completed(futures)]  
     return results
