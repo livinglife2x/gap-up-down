@@ -78,7 +78,7 @@ def get_balance(access_token):
     response = requests.get(url, headers=headers)
     print(response)
     return response.json()['data']['equity']['available_margin']
-def generate_stock_list(data):
+def execute_stock_list(data):
     symbol = data[0]
     capital_per_stock = data[1]
     access_token = data[2]
@@ -87,11 +87,12 @@ def generate_stock_list(data):
     print(ltp)
     prv_high = get_historical_data(symbol)[2].iloc[-1]
     if ltp<prv_high:
-        temp_dict['symbol']=symbol
-        temp_dict['quantity'] = (math.floor(capital_per_stock/ltp))*3
-        temp_dict['side'] = 'SELL'
-        temp_dict['access_token'] = access_token
-    return temp_dict
+        #temp_dict['symbol']=symbol
+        quantity = (math.floor(capital_per_stock/ltp))*3
+        #temp_dict['side'] = 'SELL'
+        #temp_dict['access_token'] = access_token
+        place_order(symbol,"SELL",quantity,access_token)
+    return True
 
 def execute_orders(trade_list):
     with concurrent.futures.ThreadPoolExecutor() as executor:
