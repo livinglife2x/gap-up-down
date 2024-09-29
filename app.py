@@ -40,9 +40,8 @@ while True:
     try:
         today = dt.datetime.now(india)
         if today.time()>=dt.datetime.strptime("9:15", '%H:%M').time() and not positions_taken and trade_day:
-          trade_list = return_stock_trade_list(stock_feed)
           if get_market_status(access_token) and trade_list:
-            execute_orders(trade_list)
+            execute_stock_trade_list(stock_feed)
             positions_taken=True
             time.sleep(5)
         if positions_taken:
