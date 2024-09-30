@@ -24,6 +24,7 @@ print(config)
 key = 'stocks_to_trade.csv'
 obj = s3.get_object(Bucket=bucket_name, Key=key)
 stocks_to_trade = pd.read_csv(io.BytesIO(obj['Body'].read()))['1']
+print(stocks_to_trade)
 #config = json.load('.Downloads/config')
 access_token = config['access_token']
 trade_day = config['trade_day']
