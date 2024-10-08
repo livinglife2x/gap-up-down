@@ -144,7 +144,7 @@ def check_prv_high_exit(symbol,quantity,access_token):
         place_order(symbol,'BUY',quantity,access_token)
     return True
         
-def generate_exit_list(existing_positions,access_token):
+def generate_exit_list(existing_positions,access_token,stocks_to_trade):
     exit_trade_list = []
     for i in existing_positions:
         temp_dict = {}
@@ -152,7 +152,8 @@ def generate_exit_list(existing_positions,access_token):
         temp_dict['quantity'] = i['quantity']
         temp_dict['side'] = 'BUY'
         temp_dict['access_token']=access_token
-        exit_trade_list.append(temp_dict)
+        if i['symbol'] in stocks_to_trade.values:
+            exit_trade_list.append(temp_dict)
     return exit_trade_list
 
 def execute_exit_orders(exit_trade_list):
