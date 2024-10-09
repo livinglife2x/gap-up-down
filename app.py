@@ -33,7 +33,7 @@ positions_taken = False
 india = pytz.timezone('Asia/Calcutta')
 today = dt.datetime.now(india)
 existing_positions=None
-capital_per_stock = get_balance(access_token)/len(stocks_to_trade)
+capital_per_stock = (get_balance(access_token)*0.5)/len(stocks_to_trade)
 print('capital per stock',capital_per_stock)
 stock_feed = []
 for stock in stocks_to_trade:
