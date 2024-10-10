@@ -167,3 +167,25 @@ def execute_stock_trade_list(stock_feed):
         futures = {executor.submit(execute_stock_list, data): data for data in stock_feed}
         results = [f.result() for f in concurrent.futures.as_completed(futures)]  
     return results
+
+def exit_all_positions(access_token):
+    url = 'https://api.upstox.com/v2/order/positions/exit'
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': f'Bearer {access_token}',
+    }
+    
+    data = {}
+    
+    try:
+        # Send the POST request
+        response = requests.post(url, json=data, headers=headers)
+    
+        # Print the response status code and body
+        print('Response Code:', response.status_code)
+        print('Response Body:', response.json())
+    
+    except Exception as e:
+        # Handle exceptions
+        print('Error:', str(e))
