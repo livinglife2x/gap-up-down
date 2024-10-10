@@ -102,21 +102,24 @@ def execute_orders(trade_list):
     return results
 
 def get_positions(access_token):
-    positions = []
-    url = 'https://api.upstox.com/v2/portfolio/short-term-positions'
-    headers = {
-    'Accept': 'application/json',
-    'Authorization': f'Bearer {access_token}'
-    }
-
-    response = requests.get(url, headers=headers)
-    for i in response.json()['data']:
-        temp_dict={}
-        if i['quantity']:
-            temp_dict['quantity'] = abs(i['quantity'])
-            temp_dict['symbol'] = i['instrument_token']
-            positions.append(temp_dict)
-    return positions
+    try:
+        positions = []
+        url = 'https://api.upstox.com/v2/portfolio/short-term-positions'
+        headers = {
+        'Accept': 'application/json',
+        'Authorization': f'Bearer {access_token}'
+        }
+    
+        response = requests.get(url, headers=headers)
+        for i in response.json()['data']:
+            temp_dict={}
+            if i['quantity']:
+                temp_dict['quantity'] = abs(i['quantity'])
+                temp_dict['symbol'] = i['instrument_token']
+                positions.append(temp_dict)
+        return positions
+    except:
+        return []
             
 
 def get_historical_data(symbol):
