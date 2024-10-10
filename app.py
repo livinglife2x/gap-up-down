@@ -53,8 +53,9 @@ while True:
             exit_trade_list = generate_exit_list(existing_positions,access_token,stocks_to_trade)
             execute_exit_orders(exit_trade_list)
         if today.time()>=dt.datetime.strptime("15:09", '%H:%M').time() and existing_positions:
-            exit_trade_list = generate_exit_list(existing_positions,access_token,stocks_to_trade)
-            execute_orders(exit_trade_list)
+            #exit_trade_list = generate_exit_list(existing_positions,access_token,stocks_to_trade)
+            #execute_orders(exit_trade_list)
+            exit_all_positions(access_token)
             time.sleep(5)
     except Exception as e:
         print(e)
