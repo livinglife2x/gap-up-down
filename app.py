@@ -47,6 +47,7 @@ while True:
             positions_taken=True
             time.sleep(5)
         if positions_taken:
+          print("positions checked at ",today)
           existing_positions = get_positions(access_token)
           time.sleep(10)
         if existing_positions:
