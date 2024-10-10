@@ -48,7 +48,7 @@ while True:
             time.sleep(5)
         if positions_taken:
           existing_positions = get_positions(access_token)
-          time.sleep(5)
+          time.sleep(10)
         if existing_positions:
             exit_trade_list = generate_exit_list(existing_positions,access_token,stocks_to_trade)
             execute_exit_orders(exit_trade_list)
