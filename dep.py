@@ -118,7 +118,8 @@ def get_positions(access_token):
                 temp_dict['symbol'] = i['instrument_token']
                 positions.append(temp_dict)
         return positions
-    except:
+    except Exception as e:
+        print(e)
         return []
             
 
