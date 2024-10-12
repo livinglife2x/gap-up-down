@@ -85,7 +85,7 @@ def execute_stock_list(data):
     price = data[2]
     temp_dict={}
     #temp_dict['symbol']=symbol
-    quantity = (math.floor(capital_per_stock/ltp))*3
+    quantity = (math.floor(capital_per_stock/price))*3
     #temp_dict['side'] = 'SELL'
     #temp_dict['access_token'] = access_token
     place_order(symbol,"SELL",quantity,price,access_token)
