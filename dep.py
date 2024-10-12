@@ -5,7 +5,7 @@ import concurrent.futures
 import math
 import time
 
-def place_order(symbol,side,quantity,access_token):
+def place_order(symbol,side,quantity,price,access_token):
     url = 'https://api-hft.upstox.com/v2/order/place'
     headers = {
     'Content-Type': 'application/json',
@@ -18,10 +18,10 @@ def place_order(symbol,side,quantity,access_token):
     'quantity': quantity,
     'product': 'I',
     'validity': 'DAY',
-    'price': 0,
+    'price': price,
     'tag': 'string',
     'instrument_token': symbol,
-    'order_type': 'MARKET',
+    'order_type': 'LIMIT',
     'transaction_type': side,
     'disclosed_quantity': 0,
     'trigger_price': 0,
@@ -81,17 +81,14 @@ def get_balance(access_token):
 def execute_stock_list(data):
     symbol = data[0]
     capital_per_stock = data[1]
-    access_token = data[2]
+    access_token = data[3]
+    price = data[2]
     temp_dict={}
-    ltp = get_ltp(symbol,access_token)
-    print(ltp)
-    prv_high = get_historical_data(symbol)[2].iloc[-1]
-    if ltp<prv_high:
-        #temp_dict['symbol']=symbol
-        quantity = (math.floor(capital_per_stock/ltp))*3
-        #temp_dict['side'] = 'SELL'
-        #temp_dict['access_token'] = access_token
-        place_order(symbol,"SELL",quantity,access_token)
+    #temp_dict['symbol']=symbol
+    quantity = (math.floor(capital_per_stock/ltp))*3
+    #temp_dict['side'] = 'SELL'
+    #temp_dict['access_token'] = access_token
+    place_order(symbol,"SELL",quantity,price,access_token)
     return True
 
 def execute_orders(trade_list):
