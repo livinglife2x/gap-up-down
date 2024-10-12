@@ -36,8 +36,31 @@ existing_positions=None
 capital_per_stock = (get_balance(access_token)*0.5)/len(stocks_to_trade)
 print('capital per stock',capital_per_stock)
 stock_feed = []
+scrip_list = ",".join(stocks_to_trade)
+while True:
+    today = dt.datetime.now(india)
+    if today.time()>=dt.datetime.strptime("9:13:00", '%H:%M:%S').time():
+        url = f'https://api.upstox.com/v2/market-quote/ltp?instrument_key={scrip_list}'
+        headers = {
+        'Accept': 'application/json',
+        'Authorization': f'Bearer {access_token}'
+        }
+
+        response = requests.get(url, headers=headers)
+        data = response.json()
+        ltp_list = []
+        #print(data)
+
+        for i in data['data']:
+            ltp_list.append([data['data'][i]['instrument_token'],data['data'][i]['last_price']])
+        print("data obtained today")
+        break
 for stock in stocks_to_trade:
-    stock_feed.append([stock,capital_per_stock,access_token])
+    for i in ltp_list:
+      if i[0] == stock:
+        prv_high = get_historical_data(stock)[2].iloc[-1]
+        if i[1]<prv_high:
+          stock_feed.append([stock,capital_per_stock,i[1],access_token])
 while True:
     try:
         today = dt.datetime.now(india)
