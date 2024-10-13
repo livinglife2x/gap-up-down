@@ -18,13 +18,13 @@ def place_order(symbol,side,quantity,price,access_token):
     'quantity': quantity,
     'product': 'I',
     'validity': 'DAY',
-    'price': price,
+    'price': 0,
     'tag': 'string',
     'instrument_token': symbol,
-    'order_type': 'LIMIT',
+    'order_type': 'SL-M',
     'transaction_type': side,
     'disclosed_quantity': 0,
-    'trigger_price': 0,
+    'trigger_price': price,
     'is_amo': False,
     }
 
