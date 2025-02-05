@@ -21,7 +21,7 @@ def place_order(symbol,side,quantity,price,access_token):
     'price': 0,
     'tag': 'string',
     'instrument_token': symbol,
-    'order_type': 'SL-M',
+    'order_type': 'MARKET',
     'transaction_type': side,
     'disclosed_quantity': 0,
     'trigger_price': price,
@@ -52,7 +52,7 @@ def get_market_status(access_token):
     response = requests.get(url, headers=headers)
 
     status = response.json()['data']['status']
-    if status == "NORMAL_OPEN":
+    if "OPEN" in status:
         return True
     return False
     
@@ -83,17 +83,14 @@ def execute_stock_list(data):
     capital_per_stock = data[1]
     access_token = data[3]
     price = data[2]
-    temp_dict={}
-    #temp_dict['symbol']=symbol
-    quantity = (math.floor(capital_per_stock/price))*3
-    #temp_dict['side'] = 'SELL'
-    #temp_dict['access_token'] = access_token
-    place_order(symbol,"SELL",quantity,price,access_token)
+    quantity = (math.floor(capital_per_stock/price))*4
+    if quantity:
+        place_order(symbol,"SELL",quantity,0,access_token)
     return True
 
 def execute_orders(trade_list):
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(place_order, stock['symbol'], stock['side'], stock['quantity'],stock['access_token']) for stock in trade_list]
+        futures = [executor.submit(place_order, stock['symbol'], stock['side'], stock['quantity'],0,stock['access_token']) for stock in trade_list]
         results = [f.result() for f in concurrent.futures.as_completed(futures)]
         
     return results
@@ -113,6 +110,7 @@ def get_positions(access_token):
             if i['quantity']:
                 temp_dict['quantity'] = abs(i['quantity'])
                 temp_dict['symbol'] = i['instrument_token']
+                temp_dict['entered_price'] = i["day_sell_price"]
                 positions.append(temp_dict)
         return positions
     except Exception as e:
@@ -121,7 +119,7 @@ def get_positions(access_token):
             
 
 def get_historical_data(symbol):
-    url = f'https://api.upstox.com/v2/historical-candle/{symbol}/day/2099-12-30/2024-01-01'
+    url = f'https://api.upstox.com/v2/historical-candle/{symbol}/day/2099-12-30/2025-01-01'
     headers = {
     'Accept': 'application/json'
     }
@@ -135,14 +133,16 @@ def get_historical_data(symbol):
         print(f"Error: {response.status_code} - {response.text}")
         return pd.DataFrame()
 
-def check_prv_high_exit(symbol,quantity,access_token):
+def check_prv_high_exit(symbol,quantity,access_token,entered_price):
+    """
     hist_data = get_historical_data(symbol)
     if hist_data.empty:
         return False
     prv_high = hist_data[2].iloc[-1]
+    """
     ltp = get_ltp(symbol,access_token)
-    if ltp>prv_high:
-        place_order(symbol,'BUY',quantity,access_token)
+    if ltp>=entered_price*1.02:
+        place_order(symbol,'BUY',quantity,0,access_token)
     return True
         
 def generate_exit_list(existing_positions,access_token,stocks_to_trade):
@@ -153,13 +153,14 @@ def generate_exit_list(existing_positions,access_token,stocks_to_trade):
         temp_dict['quantity'] = i['quantity']
         temp_dict['side'] = 'BUY'
         temp_dict['access_token']=access_token
-        if i['symbol'] in stocks_to_trade.values:
+        temp_dict['entered_price'] = i["entered_price"]
+        if i['symbol'] in stocks_to_trade.values and i['quantity']:
             exit_trade_list.append(temp_dict)
     return exit_trade_list
 
 def execute_exit_orders(exit_trade_list):
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(check_prv_high_exit, stock['symbol'], stock['quantity'],stock['access_token']) for stock in exit_trade_list]
+        futures = [executor.submit(check_prv_high_exit, stock['symbol'], stock['quantity'],stock['access_token'],stock['entered_price']) for stock in exit_trade_list]
         results = [f.result() for f in concurrent.futures.as_completed(futures)]  
 
 def execute_stock_trade_list(stock_feed):
