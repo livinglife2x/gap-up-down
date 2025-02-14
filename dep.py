@@ -83,7 +83,7 @@ def execute_stock_list(data):
     capital_per_stock = data[1]
     access_token = data[3]
     price = data[2]
-    quantity = (math.floor(capital_per_stock/price))*4
+    quantity = (math.floor(capital_per_stock/price))*3
     if quantity:
         place_order(symbol,"SELL",quantity,0,access_token)
     return True
