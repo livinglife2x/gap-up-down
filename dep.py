@@ -234,7 +234,8 @@ def create_slm_orders(existing_positions,stocks_to_trade,existing_slm_orders,acc
                     temp_dict['quantity'] = position['quantity']
                     temp_dict['side'] = 'BUY'
                     temp_dict['access_token'] = access_token
-                    temp_dict['trigger_price'] = position["entered_price"]*1.02
+                    temp_dict['trigger_price'] = round(position["entered_price"]*1.02*10)/10
+
             if temp_dict:
                 slm_order_list.append(temp_dict)
     return slm_order_list
