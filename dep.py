@@ -5,7 +5,7 @@ import concurrent.futures
 import math
 import time
 
-def place_order(symbol,side,quantity,price,access_token):
+def place_order(symbol,side,order_type,quantity,price,trigger_price,access_token):
     url = 'https://api-hft.upstox.com/v2/order/place'
     headers = {
     'Content-Type': 'application/json',
@@ -18,13 +18,13 @@ def place_order(symbol,side,quantity,price,access_token):
     'quantity': quantity,
     'product': 'I',
     'validity': 'DAY',
-    'price': 0,
+    'price': price,
     'tag': 'string',
     'instrument_token': symbol,
-    'order_type': 'MARKET',
+    'order_type': order_type,
     'transaction_type': side,
     'disclosed_quantity': 0,
-    'trigger_price': price,
+    'trigger_price': trigger_price,
     'is_amo': False,
     }
 
@@ -35,13 +35,38 @@ def place_order(symbol,side,quantity,price,access_token):
         # Print the response status code and body
         print('Response Code:', response.status_code)
         print('Response Body:', response.json())
-        return True
+        response_json = response.json()
+        response_json["symbol"] = symbol
+        return response_json
 
     except Exception as e:
         # Handle exceptions
         print('Error:', str(e))
-        return False
-        
+        return {}
+
+def cancel_order(order_id,access_token):
+    url = f'https://api-hft.upstox.com/v2/order/cancel?order_id={order_id}'
+    headers = {
+        'Accept': 'application/json',
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    response = requests.delete(url, headers=headers)
+    return response.json()
+
+def get_order_status(order_id,access_token):
+    url = 'https://api.upstox.com/v2/order/details'
+    headers = {
+        'Accept': 'application/json',
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    params = {'order_id': order_id}
+
+    response = requests.get(url, headers=headers, params=params)
+    return response.json()
+
+
 def get_market_status(access_token):
     url = 'https://api.upstox.com/v2/market/status/NSE'
     headers = {
@@ -85,7 +110,7 @@ def execute_stock_list(data):
     price = data[2]
     quantity = (math.floor(capital_per_stock/price))*3
     if quantity:
-        place_order(symbol,"SELL",quantity,0,access_token)
+        place_order(symbol,"SELL","MARKET",quantity,0,0,access_token)
     return True
 
 def execute_orders(trade_list):
@@ -133,7 +158,7 @@ def get_historical_data(symbol):
         print(f"Error: {response.status_code} - {response.text}")
         return pd.DataFrame()
 
-def check_prv_high_exit(symbol,quantity,access_token,entered_price):
+def check_prv_high_exit(symbol,quantity,access_token,entered_price,existing_slm_orders):
     """
     hist_data = get_historical_data(symbol)
     if hist_data.empty:
@@ -142,7 +167,13 @@ def check_prv_high_exit(symbol,quantity,access_token,entered_price):
     """
     ltp = get_ltp(symbol,access_token)
     if ltp>=entered_price*1.02:
-        place_order(symbol,'BUY',quantity,0,access_token)
+        for order in existing_slm_orders:
+            if order['symbol']==symbol:
+                response = cancel_order(order["order_id"], access_token)
+                time.sleep(1)
+                response = get_order_status(order["order_id"],access_token)
+                if response["data"]["status"]=="cancelled":
+                    place_order(symbol,'BUY',"MARKET",quantity,0,0,access_token)
     return True
         
 def generate_exit_list(existing_positions,access_token,stocks_to_trade):
@@ -158,9 +189,9 @@ def generate_exit_list(existing_positions,access_token,stocks_to_trade):
             exit_trade_list.append(temp_dict)
     return exit_trade_list
 
-def execute_exit_orders(exit_trade_list):
+def execute_exit_orders(exit_trade_list,existing_slm_orders):
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(check_prv_high_exit, stock['symbol'], stock['quantity'],stock['access_token'],stock['entered_price']) for stock in exit_trade_list]
+        futures = [executor.submit(check_prv_high_exit, stock['symbol'], stock['quantity'],stock['access_token'],stock['entered_price'],existing_slm_orders) for stock in exit_trade_list]
         results = [f.result() for f in concurrent.futures.as_completed(futures)]  
 
 def execute_stock_trade_list(stock_feed):
@@ -191,3 +222,30 @@ def exit_all_positions(access_token):
     except Exception as e:
         # Handle exceptions
         print('Error:', str(e))
+
+def create_slm_orders(existing_positions,stocks_to_trade,existing_slm_orders,access_token):
+    slm_order_list = []
+    if existing_positions:
+        for position in existing_positions:
+            temp_dict = {}
+            if position["symbol"] in stocks_to_trade.values:
+                if not any(d["symbol"] == position["symbol"] for d in existing_slm_orders):
+                    temp_dict["symbol"] = position["symbol"]
+                    temp_dict['quantity'] = position['quantity']
+                    temp_dict['side'] = 'BUY'
+                    temp_dict['access_token'] = access_token
+                    temp_dict['trigger_price'] = position["entered_price"]*1.02
+            if temp_dict:
+                slm_order_list.append(temp_dict)
+    return slm_order_list
+
+def execute_slm_orders_list(slm_order_list):
+    #symbol,side,order_type,quantity,price,trigger_price,access_tokenx
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(place_order, stock['symbol'],"BUY","SL-M", stock['quantity'],0,stock["trigger_price"],stock['access_token']) for stock in slm_order_list]
+        results = [f.result() for f in concurrent.futures.as_completed(futures)]
+    return results
+
+
+
+

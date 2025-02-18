@@ -42,6 +42,7 @@ except:
     capital_per_stock = 0
 print('capital per stock',capital_per_stock)
 stock_feed = []
+existing_slm_orders = []
 #scrip_list = ",".join(stocks_to_trade)
 """
 while True:
@@ -76,10 +77,16 @@ while True:
         if positions_taken:
             #print("positions checked at ",today)
             existing_positions = get_positions(access_token)
+        if existing_positions and today.time()>=dt.datetime.strptime("9:15", '%H:%M').time():
+            slm_order_list = create_slm_orders(existing_positions,stocks_to_trade['1'],existing_slm_orders,access_token)
+            results = execute_slm_orders_list(slm_order_list)
+            for result in results:
+                if result:
+                    existing_slm_orders.append({"symbol":result['symbol'],"order_id":result['data']['order_id']})
             time.sleep(10)
         if existing_positions:
             exit_trade_list = generate_exit_list(existing_positions,access_token,stocks_to_trade['1'])
-            execute_exit_orders(exit_trade_list)
+            execute_exit_orders(exit_trade_list,existing_slm_orders)
         if positions_taken:
             existing_positions = get_positions(access_token)
             time.sleep(5)
