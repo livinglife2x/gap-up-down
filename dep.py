@@ -113,7 +113,10 @@ def execute_stock_list(data):
         place_order(symbol,"SELL","MARKET",quantity,0,0,access_token)
     return True
 
-def execute_orders(trade_list):
+def execute_orders(trade_list,existing_slm_orders,access_token):
+    for order in existing_slm_orders:
+        response = cancel_order(order["order_id"], access_token)
+    time.sleep(2)
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = [executor.submit(place_order, stock['symbol'], stock['side'], stock['quantity'],0,stock['access_token']) for stock in trade_list]
         results = [f.result() for f in concurrent.futures.as_completed(futures)]
@@ -167,6 +170,7 @@ def check_prv_high_exit(symbol,quantity,access_token,entered_price,existing_slm_
     """
     ltp = get_ltp(symbol,access_token)
     if ltp>=entered_price*1.02:
+        time.sleep(1)
         for order in existing_slm_orders:
             if order['symbol']==symbol:
                 response = cancel_order(order["order_id"], access_token)
@@ -247,6 +251,13 @@ def execute_slm_orders_list(slm_order_list):
         results = [f.result() for f in concurrent.futures.as_completed(futures)]
     return results
 
+
+def delete_completed_slm_order(existing_slm_orders,access_token):
+    for i in range(len(existing_slm_orders) - 1, -1, -1):
+        order = existing_slm_orders[i]
+        if get_order_status(order["order_id"], access_token)["data"]["status"] == "completed":
+            del existing_slm_orders[i]
+    return existing_slm_orders
 
 
 

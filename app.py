@@ -78,6 +78,8 @@ while True:
             #print("positions checked at ",today)
             existing_positions = get_positions(access_token)
         if existing_positions and today.time()>=dt.datetime.strptime("9:15", '%H:%M').time():
+            time.sleep(2)
+            existing_slm_orders = delete_completed_slm_order(existing_slm_orders, access_token)
             slm_order_list = create_slm_orders(existing_positions,stocks_to_trade['1'],existing_slm_orders,access_token)
             results = execute_slm_orders_list(slm_order_list)
             for result in results:
@@ -85,6 +87,7 @@ while True:
                     existing_slm_orders.append({"symbol":result['symbol'],"order_id":result['data']['order_id']})
             time.sleep(10)
         if existing_positions:
+            existing_slm_orders = delete_completed_slm_order(existing_slm_orders,access_token)
             exit_trade_list = generate_exit_list(existing_positions,access_token,stocks_to_trade['1'])
             execute_exit_orders(exit_trade_list,existing_slm_orders)
         if positions_taken:
@@ -93,7 +96,7 @@ while True:
         if today.time()>=dt.datetime.strptime("15:09", '%H:%M').time():
             if existing_positions:
                 exit_trade_list = generate_exit_list(existing_positions,access_token,stocks_to_trade['1'])
-                execute_orders(exit_trade_list)
+                execute_orders(exit_trade_list,existing_slm_orders,access_token)
                 
             break
     except Exception as e:
