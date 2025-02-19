@@ -87,7 +87,6 @@ while True:
                     existing_slm_orders.append({"symbol":result['symbol'],"order_id":result['data']['order_id']})
             time.sleep(10)
         if existing_positions:
-            existing_slm_orders = delete_completed_slm_order(existing_slm_orders,access_token)
             exit_trade_list = generate_exit_list(existing_positions,access_token,stocks_to_trade['1'])
             execute_exit_orders(exit_trade_list,existing_slm_orders)
         if positions_taken:
