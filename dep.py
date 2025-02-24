@@ -255,7 +255,7 @@ def execute_slm_orders_list(slm_order_list):
 def delete_completed_slm_order(existing_slm_orders,access_token):
     for i in range(len(existing_slm_orders) - 1, -1, -1):
         order = existing_slm_orders[i]
-        if get_order_status(order["order_id"], access_token)["data"]["status"] == "completed":
+        if get_order_status(order["order_id"], access_token)["data"]["status"] == "completed" or get_order_status(order["order_id"], access_token)["data"]["status"]=="cancelled":
             del existing_slm_orders[i]
     return existing_slm_orders
 
