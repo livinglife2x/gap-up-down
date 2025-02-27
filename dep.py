@@ -118,7 +118,8 @@ def execute_orders(trade_list,existing_slm_orders,access_token):
         response = cancel_order(order["order_id"], access_token)
     time.sleep(2)
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(place_order, stock['symbol'], stock['side'], stock['quantity'],0,stock['access_token']) for stock in trade_list]
+        #symbol,side,order_type,quantity,price,trigger_price,access_token
+        futures = [executor.submit(place_order, stock['symbol'], stock['side'],"MARKET", stock['quantity'],0,0,stock['access_token']) for stock in trade_list]
         results = [f.result() for f in concurrent.futures.as_completed(futures)]
         
     return results
