@@ -11,8 +11,8 @@ import pytz
 import datetime as dt
 
 s3 = boto3.client('s3',
-                 aws_access_key_id='AKIAYZZGSWEJG3SOXO5O',
-                 aws_secret_access_key='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',)
+                 aws_access_key_id='abc',
+                 aws_secret_access_key='abc',)
 bucket_name = 'trade-artifacts'
 json_file_key = 'config.json'
 response = s3.get_object(Bucket=bucket_name, Key=json_file_key)
